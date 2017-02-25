@@ -3,9 +3,12 @@ project(mepulator)
 
 add_definitions("-std=c++14")
 
+include_directories(src)
+
 add_executable(mepulator
 	src/cpu.cpp
 	src/insn.cpp
 	src/main.cpp
 	src/memory.cpp
+	src/devices/bigmac.cpp
 )

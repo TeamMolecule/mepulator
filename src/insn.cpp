@@ -95,9 +95,10 @@ IMPL(i_beqz) {
 IMPL(i_lw_rm) {
 	uint32_t n = NI2(x);
 	uint32_t m = NI1(x);
-	uint32_t Rn = GR(n);
 	uint32_t Rm = GR(m);
+	uint32_t Rn = 0;
 	cpu->memory.Read(Rm, 4, &Rn);
+	GR(n) = Rn;
 }
 
 IMPL(i_sw_rm) {
