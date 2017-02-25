@@ -1,6 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <inttypes.h>
+#include <mutex>
 
 #include "insn.h"
 #include "memory.h"
@@ -83,8 +85,12 @@ struct Cpu {
 	INTC intc;
 	int rpb_in = -1;
 	CpuState state = CpuState::Running;
+	uint32_t pending_irq;
+
+	Cpu();
 
 	insn_t* Fetch();
 	void Step();
 	void DumpRegs();
+	void Irq(uint32_t num);
 };

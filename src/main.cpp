@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <thread>
+#include <unistd.h>
+#include <time.h>
 
 #include "arm.h"
 #include "cpu.h"
@@ -10,8 +12,10 @@
 #include "devices/unknowndevice.h"
 
 int main() {
+	setvbuf(stdout, NULL, _IONBF, 0);
+
 	Cpu *cpu = new Cpu();
-	ARMComm *comm = new ARMComm();
+	ARMComm *comm = new ARMComm(cpu);
 	ARM *arm = new ARM(comm);
 
 	cpu->memory.MapFile(0x800000, 0x200000, "1692_f00d.bin");

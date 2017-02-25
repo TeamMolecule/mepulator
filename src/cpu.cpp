@@ -8,6 +8,10 @@
 #define CRN(regname) (control.regname)
 #define GRN(regname) (gpr.regname)
 
+Cpu::Cpu():
+	pending_irq(0xFFFFFFFF)
+{}
+
 void Cpu::DumpRegs() {
 	printf("r0:  0x%08x r1:  0x%08x r2:  0x%08x r3:  0x%08x ",  GRN(r0),  GRN(r1), GRN(r2),  GRN(r3));
 	printf("r4:  0x%08x r5:  0x%08x r6:  0x%08x r7:  0x%08x\n", GRN(r4),  GRN(r5), GRN(r6),  GRN(r7));
@@ -19,6 +23,16 @@ void Cpu::DumpRegs() {
 }
 
 void Cpu::Step() {
+	if (pending_irq != -1 && (CRN(psw) & 1)) {
+		printf("got irq 0x%x\n", pending_irq);
+		// TODO: check status flags to figure which irq handler to execute, instead of hardcoding shit
+		CRN(epc) = CRN(pc);
+		CRN(pc) = 0x800030 + 4 * pending_irq;
+		state = CpuState::Running;
+
+		pending_irq = -1; // TODO
+	}
+
 	if (state == CpuState::Sleep)
 		return;
 
@@ -60,4 +74,10 @@ void Cpu::Step() {
 			}
 		}
 	}
+}
+
+
+void Cpu::Irq(uint32_t num) {
+	// TODO: check if interrupts enabled?
+	pending_irq = num;
 }

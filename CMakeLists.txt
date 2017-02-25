@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(mepulator)
 
-add_definitions("-std=c++14 -pthread")
+add_definitions("-std=c++14 -pthread -O0 -g")
 
 include_directories(src)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

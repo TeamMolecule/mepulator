@@ -165,6 +165,33 @@ jmp_target24 {
 }
 
 
+0001_0000_mmmm_1111
+jsr {
+	CRN(lp) = CRN(pc);
+	BRA(GR(m) & 0xFFFFFFFE);
+}
+
+
+0000_nnnn_mmmm_1100
+lb_rm {
+	GR(n) = SignExt(Load1(GR(m)), 8, 32);
+}
+
+
+1000_1nnn_0ddd_dddd
+disp7 = ddd_dddd
+lb_disp7 {
+	GR(n) = SignExt(Load1(GRN(tp) + disp7), 8, 32);
+}
+
+
+1100_nnnn_mmmm_1100 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+lb_disp16 {
+	GR(n) = SignExt(Load1(GR(m) + SignExt(disp16, 16, 32)), 8, 32);
+}
+
+
 0111_nnnn_iiii_101I
 imm5 = I||iiii
 ldc {
@@ -272,6 +299,13 @@ repeat {
 0111_0000_0000_0010
 ret {
 	BRA(CRN(lp));
+}
+
+
+0111_0000_0001_0010
+reti {
+	BRA(CRN(epc));
+	// TODO
 }
 
 
@@ -426,4 +460,11 @@ sw_disp16 {
 abs24 = dddd_dddd_dddd_dddd||DDDD_DD||00
 sw_abs24 {
 	Store4(GR(n), abs24);
+}
+
+
+1100_nnnn_mmmm_0110 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii
+xor3 {
+	GR(n) = GR(m) ^ imm16;
 }

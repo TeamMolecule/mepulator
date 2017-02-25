@@ -28,6 +28,9 @@ void Memory::Read(uint32_t pa, uint32_t sz, void *dest) {
 
 void Memory::Write(uint32_t pa, uint32_t sz, void *src) {
 	MemoryBank *bank = GetBank(pa, sz);
+	if (pa == 0x807c7c) {
+		printf("write %x %x %x\n", pa, sz, *(uint32_t*)src);
+	}
 	if (!bank)
 		FATAL("failed to read 0x%08x size 0x%08x\n", pa, sz);
 	switch (bank->type) {
