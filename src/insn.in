@@ -5,6 +5,25 @@ add {
 }
 
 
+0100_nnnn_0iii_ii00
+imm7=iii_ii||00
+add3_sp {
+	GR(n) = imm7 + GRN(sp);
+}
+
+
+1001_nnnn_mmmm_llll
+add3_rl {
+	GR(l) = GR(n) + GR(m);
+}
+
+
+1100_nnnn_mmmm_0000 iiii_iiii_iiii_iiii
+add3_imm16 {
+	GR(n) = GR(m) + SignExt(i, 16, 32);
+}
+
+
 0001_nnnn_mmmm_0001
 and {
 	GR(n) = GR(n) & GR(m);
@@ -219,6 +238,13 @@ sub {
 imm5 = I||iiii
 stc {
 	CR(imm5) = GR(n);
+}
+
+
+1111_nnnn_0000_0100 aaaa_aaaa_aaaa_aaaa
+abs16=aaaa_aaaa_aaaa_aaaa
+stcb {
+	printf("stcb: TODO [0x%x] <= R%d (0x%x)\n", abs16, n, GR(n));
 }
 
 
