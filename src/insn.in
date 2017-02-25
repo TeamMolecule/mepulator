@@ -107,6 +107,12 @@ di {
 }
 
 
+0111_0000_0001_0000
+ei {
+	printf("ei: TODO\n");
+}
+
+
 1110_0000_0001_1001 dddd_dddd_dddd_dddd
 disp17 = dddd_dddd_dddd_dddd||0
 erepeat {
@@ -221,6 +227,13 @@ or3 {
 0111_0000_0000_0010
 ret {
 	BRA(CRN(lp));
+}
+
+
+0111_0000_0110_0010
+sleep {
+	printf("sleep\n");
+	cpu->state = CpuState::Sleep;
 }
 
 

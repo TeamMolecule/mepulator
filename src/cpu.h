@@ -60,11 +60,17 @@ struct __attribute__ ((__packed__)) Control {
 	uint32_t r32;
 };
 
+enum class CpuState {
+	Running,
+	Sleep,
+};
+
 struct Cpu {
 	Memory memory;
 	Gpr gpr;
 	Control control;
 	int rpb_in = -1;
+	CpuState state = CpuState::Running;
 
 	insn_t* Fetch();
 	void Loop();

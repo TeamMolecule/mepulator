@@ -1,6 +1,7 @@
 #include "cpu.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include "log.h"
 
@@ -18,6 +19,11 @@ void Cpu::DumpRegs() {
 
 void Cpu::Loop() {
 	while (1) {
+		if (state == CpuState::Sleep) {
+			usleep(1000);
+			continue;
+		}
+
 		DumpRegs();
 
 		// fetch
