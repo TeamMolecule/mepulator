@@ -4,6 +4,7 @@
 #include <string>
 
 #include "cpu.h"
+#include "log.h"
 
 #define CRN(regname) (cpu->control.regname)
 #define GRN(regname) (cpu->gpr.regname)

@@ -45,6 +45,15 @@ beq {
 }
 
 
+1110_nnnn_iiii_0000 dddd_dddd_dddd_dddd
+imm4 = iiii
+disp17 = dddd_dddd_dddd_dddd||0
+beqi {
+	if (GR(n) == imm4)
+		BRA(CRN(pc) + SignExt(disp17, 17, 32) - 4);
+}
+
+
 1010_nnnn_dddd_ddd0
 disp8 = dddd_ddd||0
 beqz {
@@ -140,6 +149,12 @@ erepeat {
 }
 
 
+0001_nnnn_0000_1101
+extb {
+	GR(n) = SignExt(GR(n), 8, 32);
+}
+
+
 0001_nnnn_1000_1101
 extub {
 	GR(n) = GR(n) & 0xFF;
@@ -192,10 +207,77 @@ lb_disp16 {
 }
 
 
+0000_nnnn_mmmm_1011
+lbu_rm {
+	GR(n) = Load1(GR(m));
+}
+
+
+0100_1nnn_1ddd_dddd
+disp7 = ddd_dddd
+lbu_disp7 {
+	GR(n) = Load1(GRN(tp) + disp7);
+}
+
+
+1100_nnnn_mmmm_1011 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+lbu_disp16 {
+	GR(n) = Load1(GR(m) + SignExt(disp16, 16, 32));
+}
+
+
 0111_nnnn_iiii_101I
 imm5 = I||iiii
 ldc {
 	GR(n) = CR(imm5);
+}
+
+
+1111_nnnn_0001_0100 aaaa_aaaa_aaaa_aaaa
+abs16=aaaa_aaaa_aaaa_aaaa
+ldcb {
+	FATAL("unimplemented\n"); // TODO
+}
+
+
+0000_nnnn_mmmm_1101
+lh_rm {
+	GR(n) = SignExt(Load2(GR(m)), 16, 32);
+}
+
+
+1000_1nnn_1ddd_ddd0
+disp7 = ddd_ddd||0
+lh_disp7 {
+	GR(n) = SignExt(Load2(GRN(tp) + disp7), 16, 32);
+}
+
+
+1100_nnnn_mmmm_1101 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+lh_disp16 {
+	GR(n) = SignExt(Load2(GR(m) + SignExt(disp16, 16, 32)), 16, 32);
+}
+
+
+0000_nnnn_mmmm_1111
+lhu_rm {
+	GR(n) = Load2(GR(m));
+}
+
+
+1000_1nnn_1ddd_ddd1
+disp7 = ddd_ddd||0
+lhu_disp7 {
+	GR(n) = Load2(GRN(tp) + disp7);
+}
+
+
+1100_nnnn_mmmm_1111 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+lhu_disp16 {
+	GR(n) = Load2(GR(m) + SignExt(disp16, 16, 32));
 }
 
 
@@ -271,6 +353,18 @@ movu_imm16 {
 imm24=iiii_iiii_iiii_iiii||IIII_IIII
 movu_imm24 {
 	GR(n) = imm24;
+}
+
+
+0000_nnnn_mmmm_0001
+neg {
+	GR(n) = -GR(m);
+}
+
+
+0001_nnnn_mmmm_0011
+nor {
+	GR(n) = ~(GR(n) | GR(m));
 }
 
 
@@ -376,6 +470,26 @@ sll3 {
 }
 
 
+0000_nnnn_mmmm_0010
+slt3_r0 {
+	GRN(r0) = (int32_t)GR(n) < (int32_t)GR(m);
+}
+
+
+0110_nnnn_iiii_i001
+imm5 = iiii_i
+slt3_imm5 {
+	GRN(r0) = (int32_t)GR(n) < imm5;
+}
+
+
+1100_nnnn_mmmm_0010 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii
+slt3_imm16 {
+	GR(n) = (int32_t)GR(m) < (int32_t)SignExt(imm16, 16, 32);
+}
+
+
 0000_nnnn_mmmm_0011
 sltu3_r0 {
 	GRN(r0) = GR(n) < GR(m);
@@ -393,6 +507,20 @@ sltu3_imm5 {
 imm16 = iiii_iiii_iiii_iiii
 sltu3_imm16 {
 	GR(n) = GR(m) < imm16;
+}
+
+
+0010_nnnn_mmmm_1101
+sra_rm {
+	uint32_t bits = GR(m) & 0b11111;
+	GR(n) = SignExt((GR(n) >> bits), 32 - bits, 32);
+}
+
+
+0110_nnnn_iiii_i011
+Imm5 = iiii_i
+sra_imm5 {
+	GR(n) = SignExt((GR(n) >> Imm5), 32 - Imm5, 32);
 }
 
 
@@ -460,6 +588,12 @@ sw_disp16 {
 abs24 = dddd_dddd_dddd_dddd||DDDD_DD||00
 sw_abs24 {
 	Store4(GR(n), abs24);
+}
+
+
+0001_nnnn_mmmm_0010
+xor {
+	GR(n) = GR(n) ^ GR(m);
 }
 
 
