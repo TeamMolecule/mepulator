@@ -34,6 +34,14 @@ beqz {
 }
 
 
+1110_nnnn_mmmm_0101 dddd_dddd_dddd_dddd
+disp17 = dddd_dddd_dddd_dddd||0
+bne {
+	if (GR(n) != GR(m))
+		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+}
+
+
 1110_nnnn_iiii_0100 dddd_dddd_dddd_dddd
 imm4 = iiii
 disp17 = dddd_dddd_dddd_dddd||0
