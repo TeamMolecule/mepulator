@@ -107,6 +107,15 @@ di {
 }
 
 
+1110_0000_0001_1001 dddd_dddd_dddd_dddd
+disp17 = dddd_dddd_dddd_dddd||0
+erepeat {
+	CRN(rpb) = CRN(pc);
+	CRN(rpe) = (CRN(pc) - 4 + SignExt(disp17, 17, 32)) | 1;
+	CRN(rpc) = 0xDEADBEEF; // undefined
+}
+
+
 0001_0000_mmmm_1110
 jmp_rm {
 	CRN(pc) = GR(m) & 0xFFFFFFFE;

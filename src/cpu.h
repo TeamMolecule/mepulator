@@ -64,6 +64,7 @@ struct Cpu {
 	Memory memory;
 	Gpr gpr;
 	Control control;
+	int rpb_in = -1;
 
 	insn_t* Fetch();
 	void Loop();
