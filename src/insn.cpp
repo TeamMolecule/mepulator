@@ -120,6 +120,25 @@ IMPL(i_sw_disp16_rm) {
 	cpu->memory.Write(Rm + disp16, 4, &Rn);
 }
 
+IMPL(i_lw_abs24) {
+	uint32_t n = NI2(x);
+	uint32_t D = (x >> 2) & 0b111111;
+	uint32_t d = (x >> 16);
+	uint32_t abs24 = (d << 8) | (D << 2);
+	uint32_t Rn = 0;
+	cpu->memory.Read(abs24, 4, &Rn);
+	GR(n) = Rn;
+}
+
+IMPL(i_sw_abs24) {
+	uint32_t n = NI2(x);
+	uint32_t D = (x >> 2) & 0b111111;
+	uint32_t d = (x >> 16);
+	uint32_t abs24 = (d << 8) | (D << 2);
+	uint32_t Rn = GR(n);
+	cpu->memory.Write(abs24, 4, &Rn);
+}
+
 IMPL(i_add) {
 	uint32_t n = NI2(x);
 	uint32_t imm6 = (x >> 2) & 0b111111;
@@ -142,6 +161,12 @@ IMPL(i_or3) {
 	uint32_t m = NI1(x);
 	uint32_t imm16 = x >> 16;
 	GR(n) = GR(m) | imm16;
+}
+
+IMPL(i_and) {
+	uint32_t n = NI2(x);
+	uint32_t m = NI1(x);
+	GR(n) = GR(n) & GR(m);
 }
 
 insn_t insn_table[] = {
@@ -169,15 +194,19 @@ insn_t insn_table[] = {
 	{ 2, 0b1111000000000001, 0b1010000000000000, i_beqz },
 	// lw
 	{ 2, 0b1111000000001111, 0b0000000000001110, i_lw_rm },
+	{ 4, 0b1111000000000011, 0b1110000000000011, i_lw_abs24 },
 	// sw
 	{ 2, 0b1111000000001111, 0b0000000000001010, i_sw_rm },
 	{ 4, 0b1111000000001111, 0b1100000000001010, i_sw_disp16_rm },
+	{ 4, 0b1111000000000011, 0b1110000000000010, i_sw_abs24 },
 	// add
 	{ 2, 0b1111000000000011, 0b0110000000000000, i_add },
 	// bra
 	{ 2, 0b1111000000000001, 0b1011000000000000, i_bra },
 	// or3
 	{ 4, 0b1111000000001111, 0b1100000000000100, i_or3 },
+	// and
+	{ 2, 0b1111000000001111, 0b0001000000000001, i_and },
 };
 
 insn_t *insn_decode(uint32_t insn_i) {
