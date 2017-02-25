@@ -20,6 +20,11 @@
 #define NI2(x) (((x) >> 8 ) & 0xF)
 #define NI3(x) (((x) >> 12) & 0xF)
 
+IMPL(i_jmp_rm) {
+	uint32_t m = NI1(x);
+	CRN(pc) = GR(m) & 0xFFFFFFFE;
+}
+
 IMPL(i_jmp_target24) {
 	uint32_t T = (x & 0b0000011111110000) >> 4;
 	uint32_t t = x >> 16;
@@ -156,6 +161,13 @@ IMPL(i_mov_rm) {
 	GR(n) = GR(m);
 }
 
+IMPL(i_and3) {
+	uint32_t n = NI2(x);
+	uint32_t m = NI1(x);
+	uint32_t imm16 = x >> 16;
+	GR(n) = GR(m) & imm16;
+}
+
 IMPL(i_or3) {
 	uint32_t n = NI2(x);
 	uint32_t m = NI1(x);
@@ -169,8 +181,24 @@ IMPL(i_and) {
 	GR(n) = GR(n) & GR(m);
 }
 
+IMPL(i_bsr_disp12) {
+	uint32_t d = (x >> 1) & 0b11111111111;
+	uint32_t disp12 = d << 1;
+	CRN(lp) = CRN(pc);
+	CRN(pc) = CRN(pc) - 2 + SignExt(disp12, 12, 32);
+}
+
+IMPL(i_bsr_disp24) {
+	uint32_t D = (x >> 4) & 0b1111111;
+	uint32_t d = x >> 16;
+	uint32_t disp24 = (D << 1) | (d << 8);
+	CRN(lp) = CRN(pc);
+	CRN(pc) = CRN(pc) - 2 + SignExt(disp24, 24, 32);
+}
+
 insn_t insn_table[] = {
 	// jmp
+	{ 2, 0b1111111100001111, 0b0001000000001110, i_jmp_rm },
 	{ 4, 0b1111100000001111, 0b1101100000001000, i_jmp_target24 },
 	// ldc
 	{ 2, 0b1111000000001110, 0b0111000000001010, i_ldc },
@@ -203,10 +231,15 @@ insn_t insn_table[] = {
 	{ 2, 0b1111000000000011, 0b0110000000000000, i_add },
 	// bra
 	{ 2, 0b1111000000000001, 0b1011000000000000, i_bra },
+	// and3
+	{ 4, 0b1111000000001111, 0b1100000000000101, i_and3 },
 	// or3
 	{ 4, 0b1111000000001111, 0b1100000000000100, i_or3 },
 	// and
 	{ 2, 0b1111000000001111, 0b0001000000000001, i_and },
+	// bsr
+	{ 2, 0b1111000000000001, 0b1011000000000001, i_bsr_disp12 },
+	{ 4, 0b1111100000001111, 0b1101100000001001, i_bsr_disp24 },
 };
 
 insn_t *insn_decode(uint32_t insn_i) {
