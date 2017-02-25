@@ -17,6 +17,7 @@ add_executable(mepulator
 	src/main.cpp
 	src/memory.cpp
 	src/devices/bigmac.cpp
+	src/devices/e001device.cpp
 	src/devices/unknowndevice.cpp
 )
 
