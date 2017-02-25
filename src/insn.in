@@ -1,8 +1,76 @@
+0110_nnnn_iiii_ii00
+imm6 = iiii_ii
+add {
+	GR(n) = GR(n) + SignExt(imm6, 6, 32);
+}
+
+
+0001_nnnn_mmmm_0001
+and {
+	GR(n) = GR(n) & GR(m);
+}
+
+
+1100_nnnn_mmmm_0101 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii_iiii
+and3 {
+	GR(n) = GR(m) & imm16;
+}
+
+
+1110_nnnn_mmmm_0001 dddd_dddd_dddd_dddd
+disp17 = dddd_dddd_dddd_dddd||0
+beq {
+	if (GR(n) == GR(m))
+		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+}
+
+
 1010_nnnn_dddd_ddd0
 disp8 = dddd_ddd||0
 beqz {
 	if (GR(n) == 0)
 		CRN(pc) = CRN(pc) + disp8 - 2;
+}
+
+
+1110_nnnn_iiii_0100 dddd_dddd_dddd_dddd
+imm4 = iiii
+disp17 = dddd_dddd_dddd_dddd||0
+bnei {
+	if (GR(n) != imm4)
+		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+}
+
+
+1010_nnnn_dddd_ddd1
+disp8=dddd_ddd||0
+bnez {
+	if (GR(n) != 0)
+		CRN(pc) = CRN(pc) + disp8 - 2;
+}
+
+
+1011_dddd_dddd_ddd0
+disp12 = dddd_dddd_ddd||0
+bra {
+	CRN(pc) = CRN(pc) + SignExt(disp12, 12, 32) - 2;
+}
+
+
+1011_dddd_dddd_ddd1
+disp12 = dddd_dddd_ddd||0
+bsr_disp12 {
+	CRN(lp) = CRN(pc);
+	CRN(pc) = CRN(pc) - 2 + SignExt(disp12, 12, 32);
+}
+
+
+1101_1DDD_DDDD_1001 dddd_dddd_dddd_dddd
+disp24 = dddd_dddd_dddd_dddd||DDD_DDDD||0
+bsr_disp24 {
+	CRN(lp) = CRN(pc);
+	CRN(pc) = CRN(pc) - 4 + SignExt(disp24, 24, 32);
 }
 
 
@@ -32,6 +100,40 @@ ldc {
 }
 
 
+0000_nnnn_mmmm_1110
+lw_rm {
+	GR(n) = Load4(GR(m));
+}
+
+
+0100_nnnn_0ddd_dd11
+disp7 = ddd_dd||00
+lw_sp {
+	GR(n) = Load4(GRN(sp) + disp7);
+}
+
+
+0100_0nnn_1ddd_dd11
+disp7 = ddd_dd||00
+lw_tp {
+	GR(n) = Load4(GRN(tp) + disp7);
+}
+
+
+1100_nnnn_mmmm_1110 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+lw_disp16 {
+	GR(n) = Load4(GR(m) + SignExt(disp16, 16, 32));
+}
+
+
+1110_nnnn_DDDD_DD11 dddd_dddd_dddd_dddd
+abs24 = dddd_dddd_dddd_dddd||DDDD_DD||00
+lw_abs24 {
+	GR(n) = Load4(abs24);
+}
+
+
 0000_nnnn_mmmm_0000
 mov_rm {
 	GR(n) = GR(m);
@@ -52,6 +154,13 @@ mov_imm16 {
 }
 
 
+1100_nnnn_0010_0001 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii
+movh {
+	GR(n) = imm16 << 16;
+}
+
+
 1100_nnnn_0001_0001 iiii_iiii_iiii_iiii
 imm16 = iiii_iiii_iiii_iiii
 movu_imm16 {
@@ -63,6 +172,19 @@ movu_imm16 {
 imm24=iiii_iiii_iiii_iiii||IIII_IIII
 movu_imm24 {
 	GR(n) = imm24;
+}
+
+
+1100_nnnn_mmmm_0100 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii
+or3 {
+	GR(n) = GR(m) | imm16;
+}
+
+
+0111_0000_0000_0010
+ret {
+	CRN(pc) = CRN(lp);
 }
 
 
@@ -101,21 +223,21 @@ sw_rm {
 0100_nnnn_0ddd_dd10
 disp7 = ddd_dd||00
 sw_sp {
-	Store4(GR(n), disp7 + GRN(sp));
+	Store4(GR(n), GRN(sp) + disp7);
 }
 
 
 0100_0nnn_1ddd_dd10
 disp7 = ddd_dd||00
 sw_tp {
-	Store4(GR(n), disp7 + GRN(tp));
+	Store4(GR(n), GRN(tp) + disp7);
 }
 
 
 1100_nnnn_mmmm_1010 dddd_dddd_dddd_dddd
 disp16 = dddd_dddd_dddd_dddd
 sw_disp16 {
-	Store4(GR(n), SignExt(disp16, 16, 32) + GR(m));
+	Store4(GR(n), GR(m) + SignExt(disp16, 16, 32));
 }
 
 

@@ -19,6 +19,12 @@
 	((x >> off) & ((1 << len) - 1))
 
 
+#define Load4(addr) \
+	({uint32_t tmp = 0; \
+	 cpu->memory.Read(addr, 4, &tmp); \
+	 tmp;})
+
+
 #define Store4(value, addr) \
 	do { \
 		uint32_t tmp = value; \
