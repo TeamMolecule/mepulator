@@ -101,7 +101,7 @@ IMPL(i_beq) {
 
 IMPL(i_beqz) {
 	uint32_t n = NI2(x);
-	int8_t disp8 = x & 0xFF;
+	int8_t disp8 = x & 0xFE;
 	if (GR(n) == 0)
 		CRN(pc) = CRN(pc) + disp8 - 2;
 }
@@ -113,6 +113,13 @@ IMPL(i_bnei) {
 	uint32_t disp17 = d << 1;
 	if (GR(n) != imm4)
 		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+}
+
+IMPL(i_bnez) {
+	uint32_t n = NI2(x);
+	int8_t disp8 = x & 0xFE;
+	if (GR(n) != 0)
+		CRN(pc) = CRN(pc) + disp8 - 2;
 }
 
 IMPL(i_lw_rm) {
@@ -265,6 +272,8 @@ insn_t insn_table[] = {
 	{ 2, 0b1111000000000001, 0b1010000000000000, i_beqz },
 	// bnei
 	{ 4, 0b1111000000001111, 0b1110000000000100, i_bnei },
+	// bnez
+	{ 2, 0b1111000000000001, 0b1010000000000001, i_bnez },
 	// lw
 	{ 2, 0b1111000000001111, 0b0000000000001110, i_lw_rm },
 	{ 4, 0b1111000000001111, 0b1100000000001110, i_lw_disp16_rm },
