@@ -32,8 +32,11 @@ uint32_t EEPROMProgrammer::Read32(uint32_t addr) {
 	if (addr == 0x2c) {
 		uint32_t line = state[0x28/4];
 		printf("EEPROMProgrammer::GetProt(0x%08x)\n", line);
-		// if (line == 0x500)
-			return 0xDEAD;
+		if (line == 0x501)
+			return 0x10000007;
+		if (line >= 0x502 && line <= 0x515)
+			return 0x18000003;
+		return 0xDEAD; // 0x500 ?
 	}
 	FATAL("attempt to read EEPROMProgrammer addr 0x%x\n", addr);
 }
