@@ -1,0 +1,126 @@
+1010_nnnn_dddd_ddd0
+disp8 = dddd_ddd||0
+beqz {
+	if (GR(n) == 0)
+		CRN(pc) = CRN(pc) + disp8 - 2;
+}
+
+
+0111_0000_0000_0000
+di {
+	printf("di: TODO\n");
+}
+
+
+0001_0000_mmmm_1110
+jmp_rm {
+	CRN(pc) = GR(m) & 0xFFFFFFFE;
+}
+
+
+1101_1TTT_TTTT_1000 tttt_tttt_tttt_tttt
+target24 = tttt_tttt_tttt_tttt||TTT_TTTT||0
+jmp_target24 {
+	CRN(pc) = (CRN(pc) & 0xf0000000) | target24;
+}
+
+
+0111_nnnn_iiii_101I
+imm5 = I||iiii
+ldc {
+	GR(n) = CR(imm5);
+}
+
+
+0000_nnnn_mmmm_0000
+mov_rm {
+	GR(n) = GR(m);
+}
+
+
+0101_nnnn_iiii_iiii
+imm8 = iiii_iiii
+mov_imm8 {
+	GR(n) = SignExt(imm8, 8, 32);
+}
+
+
+1100_nnnn_0000_0001 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii
+mov_imm16 {
+	GR(n) = SignExt(imm16, 16, 32);
+}
+
+
+1100_nnnn_0001_0001 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii
+movu_imm16 {
+	GR(n) = imm16;
+}
+
+
+1101_0nnn_IIII_IIII iiii_iiii_iiii_iiii
+imm24=iiii_iiii_iiii_iiii||IIII_IIII
+movu_imm24 {
+	GR(n) = imm24;
+}
+
+
+0010_nnnn_mmmm_1100
+srl_rm {
+	GR(n) = GR(n) >> (GR(m) & 0b11111);
+}
+
+
+0110_nnnn_iiii_i010
+Imm5 = iiii_i
+srl_imm5 {
+	GR(n) = GR(n) >> Imm5;
+}
+
+
+0000_nnnn_mmmm_0100
+sub {
+	GR(n) = GR(n) - GR(m);
+}
+
+
+0111_nnnn_iiii_100I
+imm5 = I||iiii
+stc {
+	CR(imm5) = GR(n);
+}
+
+
+0000_nnnn_mmmm_1010
+sw_rm {
+	Store4(GR(n), GR(m));
+}
+
+
+0100_nnnn_0ddd_dd10
+disp7 = ddd_dd||00
+sw_sp {
+	Store4(GR(n), disp7 + GRN(sp));
+}
+
+
+0100_0nnn_1ddd_dd10
+disp7 = ddd_dd||00
+sw_tp {
+	Store4(GR(n), disp7 + GRN(tp));
+}
+
+
+1100_nnnn_mmmm_1010 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+sw_disp16 {
+	Store4(GR(n), SignExt(disp16, 16, 32) + GR(m));
+}
+
+
+1110_nnnn_DDDD_DD10 dddd_dddd_dddd_dddd
+abs24 = dddd_dddd_dddd_dddd||DDDD_DD||00
+sw_abs24 {
+	Store4(GR(n), abs24);
+}
