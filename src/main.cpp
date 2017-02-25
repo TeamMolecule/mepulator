@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "cpu.h"
+#include "devices/armcomm.h"
 #include "devices/bigmac.h"
 #include "devices/e001device.h"
 #include "devices/eeprom.h"
@@ -11,7 +12,7 @@ int main() {
 
 	cpu.memory.MapFile(0x800000, 0x200000, "1692_f00d.bin");
 
-	cpu.memory.MapDevice(0xE0000000, 8, new UnknownDevice(0xE0000000));
+	cpu.memory.MapDevice(0xE0000000, 0x20, new ARMComm());
 	cpu.memory.MapDevice(0xE0010000, 8, new e001device());
 	cpu.memory.MapDevice(0xE0020000, 8, new UnknownDevice(0xE0020000));
 	cpu.memory.MapDevice(0xE0050000, 0x80, new Bigmac);

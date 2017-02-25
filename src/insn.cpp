@@ -31,6 +31,20 @@
 		cpu->memory.Write(addr, 4, &tmp); \
 	} while(0);
 
+#define BRA(value) \
+	do_branch(cpu, value);
+
+void do_branch(Cpu *cpu, uint32_t newpc) {
+	if (cpu->rpb_in != -1) {
+		// exit repeat/erepeat block
+		if (newpc < cpu->control.rpb || newpc > cpu->control.rpe) {
+			printf("repeat/erepeat out via branch\n");
+			cpu->rpb_in = -1;
+		}
+	}
+	cpu->control.pc = newpc;
+}
+
 #include "insn_gen.h" // See src/insn.in
 
 

@@ -41,7 +41,7 @@ and3 {
 disp17 = dddd_dddd_dddd_dddd||0
 beq {
 	if (GR(n) == GR(m))
-		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+		BRA(CRN(pc) + SignExt(disp17, 17, 32) - 4);
 }
 
 
@@ -49,7 +49,7 @@ beq {
 disp8 = dddd_ddd||0
 beqz {
 	if (GR(n) == 0)
-		CRN(pc) = CRN(pc) + disp8 - 2;
+		BRA(CRN(pc) + disp8 - 2);
 }
 
 
@@ -57,7 +57,7 @@ beqz {
 disp17 = dddd_dddd_dddd_dddd||0
 bne {
 	if (GR(n) != GR(m))
-		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+		BRA(CRN(pc) + SignExt(disp17, 17, 32) - 4);
 }
 
 
@@ -66,7 +66,7 @@ imm4 = iiii
 disp17 = dddd_dddd_dddd_dddd||0
 bnei {
 	if (GR(n) != imm4)
-		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+		BRA(CRN(pc) + SignExt(disp17, 17, 32) - 4);
 }
 
 
@@ -74,14 +74,14 @@ bnei {
 disp8=dddd_ddd||0
 bnez {
 	if (GR(n) != 0)
-		CRN(pc) = CRN(pc) + disp8 - 2;
+		BRA(CRN(pc) + disp8 - 2);
 }
 
 
 1011_dddd_dddd_ddd0
 disp12 = dddd_dddd_ddd||0
 bra {
-	CRN(pc) = CRN(pc) + SignExt(disp12, 12, 32) - 2;
+	BRA(CRN(pc) + SignExt(disp12, 12, 32) - 2);
 }
 
 
@@ -89,7 +89,7 @@ bra {
 disp12 = dddd_dddd_ddd||0
 bsr_disp12 {
 	CRN(lp) = CRN(pc);
-	CRN(pc) = CRN(pc) - 2 + SignExt(disp12, 12, 32);
+	BRA(CRN(pc) - 2 + SignExt(disp12, 12, 32));
 }
 
 
@@ -97,7 +97,7 @@ bsr_disp12 {
 disp24 = dddd_dddd_dddd_dddd||DDD_DDDD||0
 bsr_disp24 {
 	CRN(lp) = CRN(pc);
-	CRN(pc) = CRN(pc) - 4 + SignExt(disp24, 24, 32);
+	BRA(CRN(pc) - 4 + SignExt(disp24, 24, 32));
 }
 
 
@@ -118,14 +118,14 @@ erepeat {
 
 0001_0000_mmmm_1110
 jmp_rm {
-	CRN(pc) = GR(m) & 0xFFFFFFFE;
+	BRA(GR(m) & 0xFFFFFFFE);
 }
 
 
 1101_1TTT_TTTT_1000 tttt_tttt_tttt_tttt
 target24 = tttt_tttt_tttt_tttt||TTT_TTTT||0
 jmp_target24 {
-	CRN(pc) = (CRN(pc) & 0xf0000000) | target24;
+	BRA((CRN(pc) & 0xf0000000) | target24);
 }
 
 
@@ -220,7 +220,7 @@ or3 {
 
 0111_0000_0000_0010
 ret {
-	CRN(pc) = CRN(lp);
+	BRA(CRN(lp));
 }
 
 

@@ -16,6 +16,7 @@ add_executable(mepulator
 	src/insn.cpp
 	src/main.cpp
 	src/memory.cpp
+	src/devices/armcomm.cpp
 	src/devices/bigmac.cpp
 	src/devices/e001device.cpp
 	src/devices/eeprom.cpp
