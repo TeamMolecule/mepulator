@@ -106,6 +106,15 @@ IMPL(i_beqz) {
 		CRN(pc) = CRN(pc) + disp8 - 2;
 }
 
+IMPL(i_bnei) {
+	uint32_t n = NI2(x);
+	uint32_t imm4 = NI1(x);
+	uint32_t d = x >> 16;
+	uint32_t disp17 = d << 1;
+	if (GR(n) != imm4)
+		CRN(pc) = CRN(pc) + SignExt(disp17, 17, 32) - 4;
+}
+
 IMPL(i_lw_rm) {
 	uint32_t n = NI2(x);
 	uint32_t m = NI1(x);
@@ -122,6 +131,25 @@ IMPL(i_sw_rm) {
 	uint32_t Rm = GR(m);
 	// printf("[0x%08x] <= 0x%08x\n", Rm, Rn);
 	cpu->memory.Write(Rm, 4, &Rn);
+}
+
+IMPL(i_sw_sp) {
+	uint32_t n = NI2(x);
+	uint32_t d = x >> 2 & 0b11111;
+	uint32_t disp7 = d << 2;
+	uint32_t addr = GRN(sp) + SignExt(disp7, 7, 32);
+	uint32_t Rn = GR(n);
+	cpu->memory.Write(addr, 4, &Rn);
+}
+
+IMPL(i_lw_disp16_rm) {
+	uint32_t n = NI2(x);
+	uint32_t m = NI1(x);
+	int16_t disp16 = (x >> 16);
+	uint32_t Rn = 0;
+	uint32_t Rm = GR(m);
+	cpu->memory.Read(Rm + disp16, 4, &Rn);
+	GR(n) = Rn;
 }
 
 IMPL(i_sw_disp16_rm) {
@@ -205,6 +233,10 @@ IMPL(i_bsr_disp24) {
 	CRN(pc) = CRN(pc) - 4 + SignExt(disp24, 24, 32);
 }
 
+IMPL(i_ret) {
+	CRN(pc) = CRN(lp);
+}
+
 insn_t insn_table[] = {
 	// jmp
 	{ 2, 0b1111111100001111, 0b0001000000001110, i_jmp_rm },
@@ -231,11 +263,15 @@ insn_t insn_table[] = {
 	{ 4, 0b1111000000001111, 0b1110000000000001, i_beq },
 	// beqz
 	{ 2, 0b1111000000000001, 0b1010000000000000, i_beqz },
+	// bnei
+	{ 4, 0b1111000000001111, 0b1110000000000100, i_bnei },
 	// lw
 	{ 2, 0b1111000000001111, 0b0000000000001110, i_lw_rm },
+	{ 4, 0b1111000000001111, 0b1100000000001110, i_lw_disp16_rm },
 	{ 4, 0b1111000000000011, 0b1110000000000011, i_lw_abs24 },
 	// sw
 	{ 2, 0b1111000000001111, 0b0000000000001010, i_sw_rm },
+	{ 2, 0b1111000010000011, 0b0100000000000010, i_sw_sp },
 	{ 4, 0b1111000000001111, 0b1100000000001010, i_sw_disp16_rm },
 	{ 4, 0b1111000000000011, 0b1110000000000010, i_sw_abs24 },
 	// add
@@ -251,6 +287,8 @@ insn_t insn_table[] = {
 	// bsr
 	{ 2, 0b1111000000000001, 0b1011000000000001, i_bsr_disp12 },
 	{ 4, 0b1111100000001111, 0b1101100000001001, i_bsr_disp24 },
+	// ret
+	{ 2, 0b1111111111111111, 0b0111000000000010, i_ret },
 };
 
 insn_t *insn_decode(uint32_t insn_i) {
