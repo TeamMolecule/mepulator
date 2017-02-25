@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(mepulator)
 
-add_definitions("-std=c++14")
+add_definitions("-std=c++14 -pthread")
 
 include_directories(src)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -12,6 +12,7 @@ add_custom_target(generate_insn
 )
 
 add_executable(mepulator
+	src/arm.cpp
 	src/cpu.cpp
 	src/insn.cpp
 	src/main.cpp
@@ -21,6 +22,10 @@ add_executable(mepulator
 	src/devices/e001device.cpp
 	src/devices/eeprom.cpp
 	src/devices/unknowndevice.cpp
+)
+
+target_link_libraries(mepulator
+	pthread
 )
 
 add_dependencies(mepulator

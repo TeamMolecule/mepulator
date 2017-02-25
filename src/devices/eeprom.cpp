@@ -1,6 +1,7 @@
 #include "eeprom.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "log.h"
 
@@ -28,17 +29,28 @@ EEPROMProgrammer::EEPROMProgrammer(EEPROM *eeprom_):
 {}
 
 uint32_t EEPROMProgrammer::Read32(uint32_t addr) {
+	if (addr == 0x2c) {
+		uint32_t line = state[0x28/4];
+		printf("EEPROMProgrammer::GetProt(0x%08x)\n", line);
+		// if (line == 0x500)
+			return 0xDEAD;
+	}
 	FATAL("attempt to read EEPROMProgrammer addr 0x%x\n", addr);
 }
 
 void EEPROMProgrammer::Write32(uint32_t addr, uint32_t value) {
 	if (addr > sizeof(state) || (addr & 0b11))
 		FATAL("invalid addr 0x%x\n", addr);
-	if (addr == 0x20) {
-		FATAL("programmer::write\n");
-	}
-	if (addr <= 0x1C)
+	if (addr <= 0x1C || addr == 0x28) {
 		state[addr / 4] = value;
-	else
-		FATAL("unimpl\n");
+	} else if (addr == 0x20) {
+		state[addr / 4] = value;
+		printf("EEPROMProgrammer::Write line = 0x%x\n", value);
+		printf("data: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n", state[0], state[1], state[2], state[3], state[4], state[5], state[6], state[7]);
+		memcpy(eeprom->memory + 32 * value, state, 0x20);
+	} else if (addr == 0x24) {
+		printf("EEPROMProgrammer::SetProt(0x%08x)\n", value);
+	} else {
+		FATAL("unimpl 0x%x\n", addr);
+	}
 }

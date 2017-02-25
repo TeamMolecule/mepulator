@@ -49,7 +49,25 @@ beq {
 disp8 = dddd_ddd||0
 beqz {
 	if (GR(n) == 0)
-		BRA(CRN(pc) + disp8 - 2);
+		BRA(CRN(pc) + SignExt(disp8, 8, 32) - 2);
+}
+
+
+1110_nnnn_iiii_1000 dddd_dddd_dddd_dddd
+imm4 = iiii
+disp17 = dddd_dddd_dddd_dddd||0
+bgei {
+	if (GR(n) >= imm4)
+		BRA(CRN(pc) + SignExt(disp17, 17, 32) - 4);
+}
+
+
+1110_nnnn_iiii_1100 dddd_dddd_dddd_dddd
+imm4 = iiii
+disp17 = dddd_dddd_dddd_dddd||0
+blti {
+	if (GR(n) < imm4)
+		BRA(CRN(pc) + SignExt(disp17, 17, 32) - 4);
 }
 
 
@@ -74,7 +92,7 @@ bnei {
 disp8=dddd_ddd||0
 bnez {
 	if (GR(n) != 0)
-		BRA(CRN(pc) + disp8 - 2);
+		BRA(CRN(pc) + SignExt(disp8, 8, 32) - 2);
 }
 
 
@@ -103,13 +121,13 @@ bsr_disp24 {
 
 0111_0000_0000_0000
 di {
-	printf("di: TODO\n");
+	CRN(psw) = CRN(psw) & 0xFFFFFFFE;
 }
 
 
 0111_0000_0001_0000
 ei {
-	printf("ei: TODO\n");
+	CRN(psw) = CRN(psw) | 1;
 }
 
 
@@ -119,6 +137,18 @@ erepeat {
 	CRN(rpb) = CRN(pc);
 	CRN(rpe) = (CRN(pc) - 4 + SignExt(disp17, 17, 32)) | 1;
 	CRN(rpc) = 0xDEADBEEF; // undefined
+}
+
+
+0001_nnnn_1000_1101
+extub {
+	GR(n) = GR(n) & 0xFF;
+}
+
+
+0001_nnnn_1010_1101
+extuh {
+	GR(n) = GR(n) & 0xFFFF;
 }
 
 
@@ -217,10 +247,25 @@ movu_imm24 {
 }
 
 
+0001_nnnn_mmmm_0000
+or {
+	GR(n) = GR(n) | GR(m);
+}
+
+
 1100_nnnn_mmmm_0100 iiii_iiii_iiii_iiii
 imm16 = iiii_iiii_iiii_iiii
 or3 {
 	GR(n) = GR(m) | imm16;
+}
+
+
+1110_nnnn_0000_1001 dddd_dddd_dddd_dddd
+disp17 = dddd_dddd_dddd_dddd||0
+repeat {
+	CRN(rpb) = CRN(pc);
+	CRN(rpe) = (CRN(pc) - 4 + SignExt(disp17, 17, 32)) | 0;
+	CRN(rpc) = GR(n);
 }
 
 
@@ -230,10 +275,90 @@ ret {
 }
 
 
+0000_nnnn_mmmm_1000
+sb {
+	Store1(GR(n), GR(m));
+}
+
+
+1000_0nnn_0ddd_dddd
+disp7 = ddd_dddd
+sb_disp7 {
+	Store1(GR(n), GRN(tp) + disp7);
+}
+
+
+1100_nnnn_mmmm_1000 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+sb_disp16 {
+	Store1(GR(n), GR(m) + SignExt(disp16, 16, 32));
+}
+
+
+0000_nnnn_mmmm_1001
+sh_rm {
+	Store2(GR(n), GR(m));
+}
+
+
+1000_0nnn_1ddd_ddd0
+disp7 = ddd_ddd||0
+sh_disp7 {
+	Store2(GR(n), GRN(tp) + disp7);
+}
+
+
+1100_nnnn_mmmm_1001 dddd_dddd_dddd_dddd
+disp16 = dddd_dddd_dddd_dddd
+sh_disp16 {
+	Store2(GR(n), GR(m) + SignExt(disp16, 16, 32));
+}
+
+
 0111_0000_0110_0010
 sleep {
 	printf("sleep\n");
 	cpu->state = CpuState::Sleep;
+}
+
+
+0010_nnnn_mmmm_1110
+sll_rm {
+	GR(n) = GR(n) << (GR(m) & 0b11111);
+}
+
+
+0110_nnnn_iiii_i110
+Imm5 = iiii_i
+sll_imm5 {
+	GR(n) = GR(n) << Imm5;
+}
+
+
+0110_nnnn_iiii_i111
+imm5 = iiii_i
+sll3 {
+	GR(0) = GR(n) << imm5;
+}
+
+
+0000_nnnn_mmmm_0011
+sltu3_r0 {
+	GRN(r0) = GR(n) < GR(m);
+}
+
+
+0110_nnnn_iiii_i101
+imm5 = iiii_i
+sltu3_imm5 {
+	GRN(r0) = GR(n) < imm5;
+}
+
+
+1100_nnnn_mmmm_0011 iiii_iiii_iiii_iiii
+imm16 = iiii_iiii_iiii_iiii
+sltu3_imm16 {
+	GR(n) = GR(m) < imm16;
 }
 
 

@@ -60,6 +60,17 @@ struct __attribute__ ((__packed__)) Control {
 	uint32_t r32;
 };
 
+struct __attribute__ ((__packed__)) INTC {
+	uint32_t ivr;
+	uint32_t isr;
+	uint32_t ier;
+	uint32_t iet;
+	uint32_t ilr0;
+	uint32_t ilr1;
+	uint32_t ilr2;
+	uint32_t ilr3;
+};
+
 enum class CpuState {
 	Running,
 	Sleep,
@@ -69,10 +80,11 @@ struct Cpu {
 	Memory memory;
 	Gpr gpr;
 	Control control;
+	INTC intc;
 	int rpb_in = -1;
 	CpuState state = CpuState::Running;
 
 	insn_t* Fetch();
-	void Loop();
+	void Step();
 	void DumpRegs();
 };
