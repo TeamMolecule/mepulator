@@ -1,6 +1,11 @@
 #pragma once
 
-typedef struct __attribute__ ((__packed__)) {
+#include <inttypes.h>
+
+#include "insn.h"
+#include "memory.h"
+
+struct __attribute__ ((__packed__)) Gpr {
 	uint32_t r0;
 	uint32_t r1;
 	uint32_t r2;
@@ -17,9 +22,9 @@ typedef struct __attribute__ ((__packed__)) {
 	uint32_t tp;
 	uint32_t gp;
 	uint32_t sp;
-} gpr_t;
+};
 
-typedef struct __attribute__ ((__packed__)) {
+struct __attribute__ ((__packed__)) Control {
 	uint32_t pc;
 	uint32_t lp;
 	uint32_t sar;
@@ -53,10 +58,14 @@ typedef struct __attribute__ ((__packed__)) {
 	uint32_t r30;
 	uint32_t r31;
 	uint32_t r32;
-} control_t;
+};
 
-typedef struct {
-	gpr_t gpr;
-	control_t control;
-	memory_t memory;
-} cpu_t;
+struct Cpu {
+	Memory memory;
+	Gpr gpr;
+	Control control;
+
+	insn_t* Fetch();
+	void Loop();
+	void DumpRegs();
+};

@@ -5,7 +5,7 @@ add_definitions("-std=c++14")
 
 add_executable(mepulator
 	src/cpu.cpp
-	src/inst.cpp
+	src/insn.cpp
 	src/main.cpp
 	src/memory.cpp
 )

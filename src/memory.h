@@ -1,10 +1,20 @@
 #pragma once
 
 #include <inttypes.h>
+#include <vector>
 
-typedef struct {
-	void (*init)(memory_t *memory);
-	void (*read)(memory_t *memory, uint32_t pa, uint32_t sz, void *dest);
-	void (*write)(memory_t *memory, uint32_t pa, uint32_t sz, void *dest);
-	void (*map_file)(memory_t *memory, uint32_t pa, const char *path);
-} memory_t;
+struct MemoryBank {
+	uint32_t pa;
+	uint32_t sz;
+	void *buffer;
+};
+
+struct Memory {
+	void Read(uint32_t pa, uint32_t sz, void *dest);
+	void Write(uint32_t pa, uint32_t sz, void *src);
+	void MapFile(uint32_t pa, uint32_t sz, const char *path);
+
+private:
+	MemoryBank *GetBank(uint32_t pa, uint32_t sz);
+	std::vector<MemoryBank> banks;
+};
