@@ -36,4 +36,5 @@ private:
 	Memory *mem;
 	bigmac_regs channels[2] = {};
 	uint32_t control[0x8/4] = { 0 };
+	uint32_t control2[0x20/4] = { 0 };
 };

@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-void hex_dump(unsigned paddr, const char *addr, size_t size) {
+void hex_dump(unsigned paddr, const uint8_t *addr, size_t size) {
 	size_t lines = (size + 0xF) / 16;
 	for (size_t line = 0; line < lines; ++line) {
 		printf("0x%08X:", paddr);

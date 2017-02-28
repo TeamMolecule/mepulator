@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(mepulator)
 
-add_definitions("-std=c++14 -pthread -O0 -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -O0 -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -O0 -g")
 
 include_directories(src)
+include_directories(deps/mbedtls/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(generate_insn
@@ -23,6 +25,10 @@ add_executable(mepulator
 	src/devices/eeprom.cpp
 	src/devices/unknowndevice.cpp
 	src/util.cpp
+
+	deps/mbedtls/library/aes.c
+	deps/mbedtls/library/aesni.c
+	deps/mbedtls/library/sha256.c
 )
 
 target_link_libraries(mepulator
