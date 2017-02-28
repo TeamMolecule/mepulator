@@ -24,6 +24,7 @@ struct Memory {
 	void Write(uint32_t pa, uint32_t sz, void *src);
 	void MapFile(uint32_t pa, uint32_t sz, const char *path);
 	void MapDevice(uint32_t pa, uint32_t sz, Device *device);
+	void MapRam(uint32_t pa, uint32_t sz);
 
 private:
 	MemoryBank *GetBank(uint32_t pa, uint32_t sz);

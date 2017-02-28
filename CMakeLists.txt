@@ -22,6 +22,7 @@ add_executable(mepulator
 	src/devices/e001device.cpp
 	src/devices/eeprom.cpp
 	src/devices/unknowndevice.cpp
+	src/util.cpp
 )
 
 target_link_libraries(mepulator

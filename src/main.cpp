@@ -16,14 +16,18 @@ int main() {
 
 	Cpu *cpu = new Cpu();
 	ARMComm *comm = new ARMComm(cpu);
-	ARM *arm = new ARM(comm);
+	ARM *arm = new ARM(comm, &cpu->memory);
 
 	cpu->memory.MapFile(0x800000, 0x200000, "1692_f00d.bin");
+
+	// note: vita dram mappings are different
+	cpu->memory.MapRam(0x40000000, 2 * 1024 * 1024); // 2 MB of secure ram
+	cpu->memory.MapRam(0x50000000, 32 * 1024 * 1024); // 32 MB of nonsecure ram
 
 	cpu->memory.MapDevice(0xE0000000, 0x20, comm);
 	cpu->memory.MapDevice(0xE0010000, 8, new e001device());
 	cpu->memory.MapDevice(0xE0020000, 8, new UnknownDevice(0xE0020000));
-	cpu->memory.MapDevice(0xE0050000, 0x80, new Bigmac);
+	cpu->memory.MapDevice(0xE0050000, 0x108, new Bigmac);
 
 	EEPROM *eeprom = new EEPROM();
 	EEPROMProgrammer *programmer = new EEPROMProgrammer(eeprom);

@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "log.h"
+#include "util.h"
 
 #define CRN(regname) (control.regname)
 #define GRN(regname) (gpr.regname)
@@ -24,10 +25,28 @@ void Cpu::DumpRegs() {
 
 void Cpu::Step() {
 	if (pending_irq != -1 && (CRN(psw) & 1)) {
+		// 3.6.5.  Hardware interrupt (INT)
 		printf("got irq 0x%x\n", pending_irq);
+
+		// A jump is executed to the exception vector address of the hardware interrupt.
+		// Interrupt vector addresses become as shown below by the CFG.IVM, EVM, EVA and IVA bits.
 		// TODO: check status flags to figure which irq handler to execute, instead of hardcoding shit
-		CRN(epc) = CRN(pc);
 		CRN(pc) = 0x800030 + 4 * pending_irq;
+
+		// The upper 31 bits of the PC value of currently executed instruction is stored in the EPC field of the EPC register.
+		CRN(epc) = CRN(pc) & 0xFFFFFFFE;
+		
+		// The EXC field value of the EXC register is set to 0.
+		// TODO
+		
+		// The PSW.IEC is saved in the PSW.IEP. The PSW.IEC is set to 0 and interrupts are disabled.
+		CRN(psw) = SetBit(CRN(psw), 1, GetBit(CRN(psw), 0)); // PSW.IEP <- PSW.IEC
+		CRN(psw) = SetBit(CRN(psw), 0, 0); // PSW.IEC = 0
+
+		// The PSW.UMC is saved in the PSW.UMP. The PSW.UMC is set to 0 and the mode changes to the kernel
+		CRN(psw) = SetBit(CRN(psw), 3, GetBit(CRN(psw), 2)); // PSW.UMP <- PSW.UMC
+		CRN(psw) = SetBit(CRN(psw), 2, 0); // PSW.UMC = 0
+
 		state = CpuState::Running;
 
 		pending_irq = -1; // TODO
@@ -36,7 +55,7 @@ void Cpu::Step() {
 	if (state == CpuState::Sleep)
 		return;
 
-	DumpRegs();
+	// DumpRegs();
 
 	// fetch
 	uint32_t insn_i = 0;

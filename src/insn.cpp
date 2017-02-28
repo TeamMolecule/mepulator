@@ -5,6 +5,7 @@
 
 #include "cpu.h"
 #include "log.h"
+#include "util.h"
 
 #define CRN(regname) (cpu->control.regname)
 #define GRN(regname) (cpu->gpr.regname)
@@ -12,12 +13,6 @@
 #define GR(num) (*((uint32_t*)&cpu->gpr + num))
 
 #define INSN(name) static void name(Cpu *cpu, uint32_t insn)
-
-#define SignExt(value, from, to) \
-	(value | ((value & (1 << (from - 1))) ? (((1 << (to - from)) - 1) << from) : (0)))
-
-#define GetBits(x, off, len) \
-	((x >> off) & ((1 << len) - 1))
 
 
 #define Load1(addr) \
@@ -62,7 +57,7 @@ void do_branch(Cpu *cpu, uint32_t newpc) {
 	if (cpu->rpb_in != -1) {
 		// exit repeat/erepeat block
 		if (newpc < cpu->control.rpb || newpc > cpu->control.rpe) {
-			printf("repeat/erepeat out via branch\n");
+			// printf("repeat/erepeat out via branch\n");
 			cpu->rpb_in = -1;
 		}
 	}

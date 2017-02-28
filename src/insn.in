@@ -130,13 +130,13 @@ bsr_disp24 {
 
 0111_0000_0000_0000
 di {
-	CRN(psw) = CRN(psw) & 0xFFFFFFFE;
+	CRN(psw) = SetBit(CRN(psw), 0, 0); // PSW.IEC = 0
 }
 
 
 0111_0000_0001_0000
 ei {
-	CRN(psw) = CRN(psw) | 1;
+	CRN(psw) = SetBit(CRN(psw), 0, 1); // PSW.IEC = 1
 }
 
 
@@ -398,8 +398,11 @@ ret {
 
 0111_0000_0001_0010
 reti {
+// TODO: we only handle non-NMI here
+	CRN(psw) = SetBit(CRN(psw), 2, GetBit(CRN(psw), 3)); // PSW.UMC <- PSW.UMP
+	CRN(psw) = SetBit(CRN(psw), 0, GetBit(CRN(psw), 1)); // PSW.IEC <- PSW.IEP
+
 	BRA(CRN(epc));
-	// TODO
 }
 
 

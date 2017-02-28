@@ -28,11 +28,8 @@ void Memory::Read(uint32_t pa, uint32_t sz, void *dest) {
 
 void Memory::Write(uint32_t pa, uint32_t sz, void *src) {
 	MemoryBank *bank = GetBank(pa, sz);
-	if (pa == 0x807c7c) {
-		printf("write %x %x %x\n", pa, sz, *(uint32_t*)src);
-	}
 	if (!bank)
-		FATAL("failed to read 0x%08x size 0x%08x\n", pa, sz);
+		FATAL("failed to write 0x%08x size 0x%08x\n", pa, sz);
 	switch (bank->type) {
 	case BankType::Memory:
 		memcpy((char*)bank->buffer + pa - bank->pa, src, sz);
@@ -71,5 +68,15 @@ void Memory::MapDevice(uint32_t pa, uint32_t sz, Device *device) {
 	bank.pa = pa;
 	bank.sz = sz;
 	bank.device = device;
+	banks.push_back(bank);
+}
+
+void Memory::MapRam(uint32_t pa, uint32_t sz) {
+	void *addr = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+	MemoryBank bank = { 0 };
+	bank.type = BankType::Memory;
+	bank.pa = pa;
+	bank.sz = sz;
+	bank.buffer = addr;
 	banks.push_back(bank);
 }
