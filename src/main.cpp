@@ -27,7 +27,7 @@ int main() {
 	cpu->memory.MapDevice(0xE0000000, 0x20, comm);
 	cpu->memory.MapDevice(0xE0010000, 8, new e001device());
 	cpu->memory.MapDevice(0xE0020000, 8, new UnknownDevice(0xE0020000));
-	cpu->memory.MapDevice(0xE0050000, 0x108, new Bigmac);
+	cpu->memory.MapDevice(0xE0050000, 0x1000, new Bigmac(&cpu->memory));
 
 	EEPROM *eeprom = new EEPROM();
 	EEPROMProgrammer *programmer = new EEPROMProgrammer(eeprom);

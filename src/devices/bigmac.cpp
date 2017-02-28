@@ -3,13 +3,20 @@
 #include <stdio.h>
 
 #include "log.h"
+#include "memory.h"
 #include "util.h"
+
+Bigmac::Bigmac(Memory *mem_):
+	mem(mem_)
+{}
 
 uint32_t Bigmac::Read32(uint32_t addr) {
 	if (addr == 0x3C) {
 		printf("access RNG\n");
 		return 0x11223344;
 	}
+	if (addr == 0x24)
+		return channels[0].busy;
 	FATAL("unknown addr 0x%x on read\n", addr);
 }
 
@@ -34,7 +41,28 @@ void Bigmac::Write32(uint32_t addr, uint32_t value) {
 			printf("control:\n");
 			hex_dump(0, (char*)control, sizeof(control));
 			printf("-------------------------------------------------------------------------------------\n");
-			FATAL("commit\n");
+
+			if (value != 1)
+				FATAL("commit: got unknown value 0x%x\n", value);
+
+			ch->busy = 1;
+			DoFunc(c);
+			ch->busy = 0;
 		}
+	}
+}
+
+void Bigmac::DoFunc(int channel) {
+	bigmac_regs *ch = &channels[channel];
+	switch (ch->func) {
+	case 0: { // memcpy
+		char *tmp = new char [ch->sz];
+		mem->Read(ch->src, ch->sz, tmp);
+		mem->Write(ch->dst, ch->sz, tmp);
+		delete[] tmp;
+		break;
+	}
+	default:
+		FATAL("unknown function 0x%x\n", ch->func);
 	}
 }
