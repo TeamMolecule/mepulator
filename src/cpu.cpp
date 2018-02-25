@@ -113,5 +113,6 @@ void Cpu::Step() {
 
 void Cpu::Irq(uint32_t num) {
 	// TODO: check if interrupts enabled?
+	printf("set pending_irq %d\n", num);
 	pending_irq = num;
 }
