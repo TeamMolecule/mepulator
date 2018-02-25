@@ -26,14 +26,18 @@ uint32_t ARMComm::Read32(uint32_t addr) {
 }
 
 void ARMComm::Write32(uint32_t addr, uint32_t value) {
-	if (addr == 0x10 && value == 0xFFFFFFFF)
+	if (addr == 0x10 && value == 0xFFFFFFFF) {
+		// Called from 0x8003FC in 1.692
 		value = 0;
+	}
 
 	switch (addr) {
 	case 0:
 		reg00 = value;
+		reg10 = 0;
 		break;
 	case 0x10:
+		reg00 = 0;
 		reg10 = value;
 		// we need to raise mep irq8
 		if (value & 1)

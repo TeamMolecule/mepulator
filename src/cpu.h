@@ -88,7 +88,7 @@ struct Cpu {
 	INTC intc;
 	int rpb_in = -1;
 	CpuState state = CpuState::Running;
-	uint32_t pending_irq;
+	std::atomic<uint32_t> pending_irq;
 
 	std::set<uint32_t> breakpoints;
 

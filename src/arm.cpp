@@ -59,7 +59,6 @@ void ARM::StartUp() {
 	TRACE("starting up...\n");
 	while (comm->Read32(0) != 257);
 	TRACE("wait for 0x101 done\n");
-	comm->Write32(0, 0);
 }
 
 void ARM::SetSharedBuffer() {
@@ -69,7 +68,6 @@ void ARM::SetSharedBuffer() {
 	comm->Write32(0x10, SHARED_BUFFER | 1);
 	TRACE("wait...");
 	while (!(ret = comm->Read32(0)));
-	comm->Write32(0, 0);
 	TRACE("wait done, 0x%x\n", ret);
 }
 
@@ -98,7 +96,6 @@ void ARM::SetRvk() {
 	mem->Write(SHARED_BUFFER, sizeof(shared), &shared);
 
 	TRACE("set_rvk\n");
-	comm->Write32(0, 0);
 	comm->Write32(0x10, 0x80A01);
 	while ((ret = comm->Read32(0x10))); // commit
 	while (!(ret = comm->Read32(0)));

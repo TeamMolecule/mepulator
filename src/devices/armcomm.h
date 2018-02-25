@@ -2,7 +2,7 @@
 
 #include "device.h"
 
-#include <mutex>
+#include <atomic>
 
 struct Cpu;
 
@@ -13,6 +13,6 @@ public:
 	void Write32(uint32_t addr, uint32_t value);
 private:
 	Cpu *cpu;
-	uint32_t reg00 = 0; // 0x00
-	uint32_t reg10 = 0; // 0x10
+	std::atomic<uint32_t> reg00; // 0x00
+	std::atomic<uint32_t> reg10; // 0x10
 };
