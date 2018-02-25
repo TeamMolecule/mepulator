@@ -5,6 +5,8 @@
 
 #include "arm.h"
 #include "cpu.h"
+#include "debugger.h"
+
 #include "devices/armcomm.h"
 #include "devices/bigmac.h"
 #include "devices/e001device.h"
@@ -17,6 +19,7 @@ int main() {
 	Cpu *cpu = new Cpu();
 	ARMComm *comm = new ARMComm(cpu);
 	ARM *arm = new ARM(comm, &cpu->memory);
+	auto dbg = new Debugger(cpu);
 
 	cpu->memory.MapFile(0x800000, 0x200000, "1692_f00d.bin");
 
@@ -38,6 +41,7 @@ int main() {
 	cpu->control.pc = 0x800100;
 
 	std::thread arm_thread(&ARM::Loop, arm);
+	std::thread dbg_thread(&Debugger::Loop, dbg);
 
 	while (1) {
 		cpu->Step();

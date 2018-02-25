@@ -4,7 +4,7 @@
 
 #include <mutex>
 
-class Cpu;
+struct Cpu;
 
 class ARMComm: public Device {
 public:
