@@ -24,6 +24,10 @@ void Cpu::DumpRegs() {
 }
 
 void Cpu::Step() {
+	// The debugger has stopped the cpu
+	if (state == CpuState::Stopped)
+		return;
+
 	if (pending_irq != -1 && (CRN(psw) & 1)) {
 		// 3.6.5.  Hardware interrupt (INT)
 		printf("got irq 0x%x\n", pending_irq);
@@ -47,13 +51,20 @@ void Cpu::Step() {
 		CRN(psw) = SetBit(CRN(psw), 3, GetBit(CRN(psw), 2)); // PSW.UMP <- PSW.UMC
 		CRN(psw) = SetBit(CRN(psw), 2, 0); // PSW.UMC = 0
 
-		state = CpuState::Running;
+		if (state == CpuState::Sleep)
+			state = CpuState::Running;
 
 		pending_irq = -1; // TODO
 	}
 
 	if (state == CpuState::Sleep)
 		return;
+
+	// Stop the cpu if we hit a breakpoint
+	if (breakpoints.find(control.pc) != breakpoints.end()) {
+		state = CpuState::Stopped;
+		return;
+	}
 
 	// DumpRegs();
 
@@ -92,6 +103,10 @@ void Cpu::Step() {
 				control.rpc--;
 			}
 		}
+	}
+
+	if (state == CpuState::SingleStep) {
+		state = CpuState::Stopped;
 	}
 }
 

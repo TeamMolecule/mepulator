@@ -3,6 +3,7 @@
 #include <atomic>
 #include <inttypes.h>
 #include <mutex>
+#include <set>
 
 #include "insn.h"
 #include "memory.h"
@@ -76,6 +77,8 @@ struct __attribute__ ((__packed__)) INTC {
 enum class CpuState {
 	Running,
 	Sleep,
+	Stopped,
+	SingleStep,
 };
 
 struct Cpu {
@@ -86,6 +89,8 @@ struct Cpu {
 	int rpb_in = -1;
 	CpuState state = CpuState::Running;
 	uint32_t pending_irq;
+
+	std::set<uint32_t> breakpoints;
 
 	Cpu();
 

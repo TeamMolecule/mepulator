@@ -14,7 +14,9 @@
 
 Debugger::Debugger(Cpu *cpu_):
 	cpu(cpu_)
-{}
+{
+	cpu->state = CpuState::Stopped;
+}
 
 void Debugger::Loop() {
 	printf("Starting the debugger...\n");
@@ -72,7 +74,7 @@ void Debugger::ProcessPacket() {
 	// TRACE("Got packet: %s\n", packet.c_str());
 	if (startswith(packet, "qSupported")) {
 		SendPacket("PacketSize=1024");
-	} else if (packet == "vMustReplyEmpty") {
+	} else if (packet[0] == 'v') {
 		SendPacket("");
 	} else if (packet == "g") {
 		// Read general registers.
@@ -91,10 +93,79 @@ void Debugger::ProcessPacket() {
 		uint32_t addr = 0, size = 0;
 		sscanf(packet.c_str() + 1, "%x,%x", &addr, &size);
 		ReadMemory(addr, size);
+	} else if (packet[0] == 's') {
+		// 's [addr]'
+		// Single step, resuming at addr. If addr is omitted, resume at same address.
+		SingleStep();
+	} else if (packet[0] == 'Z') {
+		// Insert a breakpoint
+		InsertBreakpoint(packet);
+	} else if (packet[0] == 'z') {
+		// Remove a breakpoint
+		RemoveBreakpoint(packet);
+	} else if (packet[0] == 'c') {
+		Continue();
 	} else {
 		// TRACE("Unsupported packet: %s\n", packet.c_str());
 		SendPacket("E01");
 	}
+}
+
+void Debugger::WaitCpuStop() {
+	while (cpu->state != CpuState::Stopped) {
+		uint8_t token = 0;
+		int ret = recv(client_fd, &token, 1, MSG_DONTWAIT);
+		if (ret == 1 && token == 0x03) {
+			// we got CTRL-C from gdb, must halt the cpu
+			// TODO: thread-safety
+			cpu->state = CpuState::Stopped;
+		}
+	}
+}
+
+void Debugger::Continue() {
+	AssertStopped();
+	cpu->state = CpuState::Running;
+	WaitCpuStop();
+	SendPacket("S05");
+}
+
+void Debugger::AssertStopped() {
+	if (cpu->state != CpuState::Stopped) {
+		FATAL("Cpu state must be Stopped before you can single-step, was %d", cpu->state);
+	}
+}
+
+void Debugger::InsertBreakpoint(const std::string &packet) {
+	AssertStopped();
+
+	if (packet[1] != '0' && packet[1] != '1') {
+		// Anything but hw breakpoint => not supported
+		SendPacket("");
+	}
+	uint32_t bp = 0;
+	sscanf(packet.c_str() + 3, "%x", &bp);
+	cpu->breakpoints.insert(bp);
+	SendPacket("OK");
+}
+
+void Debugger::RemoveBreakpoint(const std::string &packet) {
+	AssertStopped();
+
+	if (packet[1] != '0' && packet[1] != '1') {
+		SendPacket("");
+	}
+	uint32_t bp = 0;
+	sscanf(packet.c_str() + 3, "%x", &bp);
+	cpu->breakpoints.erase(bp);
+	SendPacket("OK");
+}
+
+void Debugger::SingleStep() {
+	AssertStopped();
+	cpu->state = CpuState::SingleStep;
+	WaitCpuStop();
+	SendPacket("S05");
 }
 
 void Debugger::ReadMemory(uint32_t addr, uint32_t size) {

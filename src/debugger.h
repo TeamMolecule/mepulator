@@ -23,6 +23,13 @@ private:
 
 	void ReadMemory(uint32_t addr, uint32_t size);
 
+	void SingleStep();
+	void AssertStopped();
+	void InsertBreakpoint(const std::string &packet);
+	void RemoveBreakpoint(const std::string &packet);
+	void Continue();
+	void WaitCpuStop();
+
 	Cpu *cpu;
 	int client_fd;
 	std::string packet;
