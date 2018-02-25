@@ -71,7 +71,7 @@ void Debugger::Loop() {
 void Debugger::ProcessPacket() {
 	// TRACE("Got packet: %s\n", packet.c_str());
 	if (startswith(packet, "qSupported")) {
-		SendPacket("PacketSize=40960");
+		SendPacket("PacketSize=1024");
 	} else if (packet == "vMustReplyEmpty") {
 		SendPacket("");
 	} else if (packet == "g") {
@@ -87,10 +87,31 @@ void Debugger::ProcessPacket() {
 	} else if (packet[0] == 'H') {
 		// Set thread for subsequent operations (‘m’, ‘M’, ‘g’, ‘G’, et.al.).
 		SendPacket("OK");
+	} else if (packet[0] == 'm') {
+		uint32_t addr = 0, size = 0;
+		sscanf(packet.c_str() + 1, "%x,%x", &addr, &size);
+		ReadMemory(addr, size);
 	} else {
 		// TRACE("Unsupported packet: %s\n", packet.c_str());
 		SendPacket("E01");
 	}
+}
+
+void Debugger::ReadMemory(uint32_t addr, uint32_t size) {
+	uint8_t buf[4096];
+	if (size > sizeof(buf)) {
+		FATAL("Buffer overflow!");
+	}
+
+	cpu->memory.Read(addr, size, buf);
+	std::string packet;
+	for (int i = 0; i < size; ++i) {
+		char tmp[8] = { 0 };
+		snprintf(tmp, sizeof(tmp), "%02X", buf[i]);
+		packet += tmp;
+	}
+
+	SendPacket(packet);
 }
 
 static std::string reg_to_hex(uint32_t value) {

@@ -21,6 +21,8 @@ private:
 	void SendRegs();
 	void SendReg(int regnum);
 
+	void ReadMemory(uint32_t addr, uint32_t size);
+
 	Cpu *cpu;
 	int client_fd;
 	std::string packet;
