@@ -10,6 +10,7 @@
 
 #include "cpu.h"
 #include "log.h"
+#include "util.h"
 
 Debugger::Debugger(Cpu *cpu_):
 	cpu(cpu_)
@@ -68,7 +69,56 @@ void Debugger::Loop() {
 }
 
 void Debugger::ProcessPacket() {
-	TRACE("Got packet: %s\n", packet.c_str());
+	// TRACE("Got packet: %s\n", packet.c_str());
+	if (startswith(packet, "qSupported")) {
+		SendPacket("PacketSize=40960");
+	} else if (packet == "vMustReplyEmpty") {
+		SendPacket("");
+	} else if (packet == "g") {
+		// Read general registers.
+		SendRegs();
+	} else if (packet[0] == 'p') {
+		// 'p n': Read the value of register n; n is in hex.
+		int regnum = strtol(packet.c_str() + 1, NULL, 16);
+		SendReg(regnum);
+	} else if (packet == "qC") {
+		// Return the current thread ID.
+		SendPacket("");
+	} else if (packet[0] == 'H') {
+		// Set thread for subsequent operations (‘m’, ‘M’, ‘g’, ‘G’, et.al.).
+		SendPacket("OK");
+	} else {
+		// TRACE("Unsupported packet: %s\n", packet.c_str());
+		SendPacket("E01");
+	}
+}
+
+static std::string reg_to_hex(uint32_t value) {
+	char buf[64] = { 0 };
+	snprintf(buf, sizeof(buf), "%02X%02X%02X%02X", value & 0xFF, (value >> 8) & 0xFF, (value >> 16) & 0xFF, (value >> 24) & 0xFF);
+	return buf;
+}
+
+uint32_t Debugger::GetReg(int regnum) {
+	if (regnum <= 15) {
+		uint32_t *gpr = (uint32_t*)&cpu->gpr;
+		return gpr[regnum];
+	}
+	uint32_t *ctr = (uint32_t*)&cpu->control;
+	return ctr[regnum - 16];
+}
+
+void Debugger::SendReg(int regnum) {
+	if (regnum <= 15) {
+		SendPacket(reg_to_hex(GetReg(regnum)));
+	}
+}
+
+void Debugger::SendRegs() {
+	std::string regs = "";
+	for (int i = 0; i < 48; ++i)
+		regs += reg_to_hex(GetReg(i));
+	SendPacket(regs);
 }
 
 #define RSP_START_TOKEN     '$'
@@ -161,6 +211,53 @@ int Debugger::ReadChar() {
 void Debugger::DisconnectClient() {
 	close(client_fd);
 	client_fd = -1;
+}
+
+static int is_token(int ch)
+{
+	return (ch == RSP_START_TOKEN
+		|| ch == RSP_END_TOKEN
+		|| ch == RSP_ESCAPE_TOKEN
+		|| ch == RSP_RUNLENGTH_TOKEN);
+}
+
+
+int Debugger::SendPacket(const std::string &packet) {
+	// TRACE("Sending packet %s\n", packet.c_str());
+
+	uint32_t sum = 0;
+
+	// write the start token
+	SendChar(RSP_START_TOKEN);
+
+	for (int i = 0; i < packet.size(); ++i) {
+		int token = packet[i] & 0xFF;
+
+		// check for any reserved tokens
+		if (is_token(token))
+		{
+			SendChar(RSP_ESCAPE_TOKEN);
+			SendChar(token ^ 0x20);
+
+			sum += RSP_ESCAPE_TOKEN;
+			sum += token ^ 0x20;
+		}
+		else
+		{
+			SendChar(token);
+			sum += token;
+		}
+	}
+
+	// done with data - now end + checksum
+	SendChar(RSP_END_TOKEN);
+
+	// checksum is mod 256
+	sum &= 0xFF;
+	SendChar(to_hex((sum >> 4) & 0xF));
+	SendChar(to_hex(sum & 0xF));
+
+	return 0;
 }
 
 int Debugger::SendChar(int ch) {

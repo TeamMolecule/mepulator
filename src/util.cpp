@@ -16,3 +16,7 @@ void hex_dump(unsigned paddr, const uint8_t *addr, size_t size) {
 		printf("\n");
 	}
 }
+
+bool startswith(const std::string &haystack, const std::string &needle) {
+	return haystack.compare(0, needle.size(), needle) == 0;
+}
