@@ -25,10 +25,12 @@ add_executable(mepulator
 	src/devices/e001device.cpp
 	src/devices/eeprom.cpp
 	src/devices/unknowndevice.cpp
+	src/devices/mathdev.cpp
 	src/util.cpp
 
 	deps/mbedtls/library/aes.c
 	deps/mbedtls/library/aesni.c
+	deps/mbedtls/library/bignum.c
 	deps/mbedtls/library/sha256.c
 )
 

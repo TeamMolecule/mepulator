@@ -13,6 +13,7 @@
 #include "devices/e001device.h"
 #include "devices/eeprom.h"
 #include "devices/unknowndevice.h"
+#include "devices/mathdev.h"
 
 int main(int argc, char *argv[]) {
 	setvbuf(stdout, NULL, _IONBF, 0);
@@ -29,7 +30,8 @@ int main(int argc, char *argv[]) {
 
 	cpu->memory.MapDevice(0xE0000000, 0x20, comm);
 	cpu->memory.MapDevice(0xE0010000, 8, new e001device());
-	cpu->memory.MapDevice(0xE0020000, 8, new UnknownDevice(0xE0020000));
+	cpu->memory.MapDevice(0xE0020000, 0x24, new UnknownDevice(0xE0020000));
+	cpu->memory.MapDevice(0xE0040000, 0x1000, new Math());
 	cpu->memory.MapDevice(0xE0050000, 0x1000, new Bigmac(&cpu->memory));
 
 	EEPROM *eeprom = new EEPROM();
