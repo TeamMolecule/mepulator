@@ -98,9 +98,54 @@ static void aes_decrypt(void *data, size_t data_sz, void *key, size_t key_sz, vo
 	delete[] tmp;
 }
 
+static void hmac_sha256(uint8_t *data, size_t data_len, uint8_t *key, size_t key_len, uint8_t *output) {
+	if (key_len != 0x20) {
+		FATAL("key_len is not 0x20\n");
+	}
+
+	printf("-- hmac-sha256 --\n");
+	printf("data:\n");
+	hex_dump(0, data, data_len);
+	printf("key:\n");
+	hex_dump(0, key, key_len);
+
+	uint8_t ipad[64] = { 0 };
+	uint8_t opad[64] = { 0 };
+	memcpy(ipad, key, key_len);
+	memcpy(opad, key, key_len);
+
+	for (int i = 0; i < 64; ++i) {
+		ipad[i] ^= 0x36;
+		opad[i] ^= 0x5c;
+	}
+
+	mbedtls_sha256_context ctx;
+    mbedtls_sha256_init(&ctx);
+
+    uint8_t tmp[0x20] = { 0 };
+
+    // Inner sha-256
+    mbedtls_sha256_starts(&ctx, 0);
+    mbedtls_sha256_update(&ctx, ipad, 64);
+    mbedtls_sha256_update(&ctx, data, data_len);
+    mbedtls_sha256_finish(&ctx, tmp);
+
+    // Outer sha-256
+    mbedtls_sha256_starts(&ctx, 0);
+    mbedtls_sha256_update(&ctx, opad, 64);
+    mbedtls_sha256_update(&ctx, tmp, 32);
+    mbedtls_sha256_finish(&ctx, output);
+
+    mbedtls_sha256_free(&ctx);
+
+    printf("output:\n");
+    hex_dump(0, output, 0x20);
+}
+
 void Bigmac::DoFunc(int channel) {
 	bigmac_regs *ch = &channels[channel];
 	switch (ch->func) {
+	case 0x2080:
 	case 0: { // memcpy
 		uint8_t *tmp = new uint8_t [ch->sz];
 		mem->Read(ch->src, ch->sz, tmp);
@@ -150,6 +195,21 @@ void Bigmac::DoFunc(int channel) {
 		
 		delete[] data;
 		delete[] iv;
+		break;
+	}
+	case 0x20b3: { // HMAC-SHA256
+		uint8_t *data = new uint8_t [ch->sz];
+		uint8_t key[0x20];
+		uint8_t digest[0x20];
+
+		memcpy(key, control2, 0x20);
+		mem->Read(ch->src, ch->sz, data);
+
+		hmac_sha256(data, ch->sz, key, 0x20, digest);
+
+		mem->Write(ch->dst, 0x20, digest);
+
+		delete[] data;
 		break;
 	}
 	default:
