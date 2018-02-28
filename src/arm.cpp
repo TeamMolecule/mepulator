@@ -105,5 +105,6 @@ void ARM::SetRvk() {
 void ARM::Loop() {
 	StartUp();
 	SetSharedBuffer();
+	usleep(100 * 1000); // TODO: figure the race here? sometimes, setting rvk just fails
 	SetRvk();
 }
