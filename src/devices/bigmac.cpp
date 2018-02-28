@@ -98,6 +98,57 @@ static void aes_decrypt(void *data, size_t data_sz, void *key, size_t key_sz, vo
 	delete[] tmp;
 }
 
+static void byteswap(uint8_t *arr, size_t sz) {
+	for (size_t i = 0; i < sz / 2; ++i) {
+		uint8_t tmp = arr[i];
+		arr[i] = arr[sz - i - 1];
+		arr[sz - i - 1] = tmp;
+	}
+}
+
+static void aes_ctr(void *data, size_t data_sz, void *key, size_t key_sz, void *iv) {
+	mbedtls_aes_context ctx;
+	mbedtls_aes_init(&ctx);
+	if (key_sz != 128 && key_sz != 192 && key_sz != 256)
+		FATAL("bad key size: %d\n", key_sz);
+	if (data_sz & 0xF)
+		FATAL("bad data size: 0x%x\n", data_sz);
+	if (mbedtls_aes_setkey_enc(&ctx, (unsigned char*)key, key_sz))
+		FATAL("mbedtls_aes_setkey_enc failed\n");
+
+#if DEBUG_CRYPTO
+	printf("-- aes-%d-ctr --\n", key_sz);
+
+	printf("key:\n");
+	hex_dump(0, (uint8_t*)key, key_sz/8);
+	printf("ctr:\n");
+	hex_dump(0, (uint8_t*)iv, 16);
+	printf("data:\n");
+	hex_dump(0, (uint8_t*)data, data_sz);
+#endif
+
+	uint8_t *tmp = new uint8_t[data_sz];
+	uint8_t counter[16];
+	uint8_t stream_block[16] = { 0 };
+	memcpy(counter, iv, 16);
+	byteswap(counter, 16);
+	size_t nc_off = 0;
+	if (mbedtls_aes_crypt_ctr(&ctx, data_sz, &nc_off, counter, stream_block, (uint8_t*)data, tmp))
+		FATAL("mbedtls_aes_crypt_ctr failed\n");
+	byteswap(counter, 16);
+	memcpy(iv, counter, 16);
+
+#if DEBUG_CRYPTO
+	printf("decrypted:\n");
+	hex_dump(0, tmp, data_sz);
+#endif
+
+	memcpy(data, tmp, data_sz);
+	delete[] tmp;
+
+	mbedtls_aes_free(&ctx);
+}
+
 static void hmac_sha256(uint8_t *data, size_t data_len, uint8_t *key, size_t key_len, uint8_t *output) {
 	if (key_len != 0x20) {
 		FATAL("key_len is not 0x20\n");
@@ -195,6 +246,21 @@ void Bigmac::DoFunc(int channel) {
 		
 		delete[] data;
 		delete[] iv;
+		break;
+	}
+	case 0x21a1: { // aes-128-ctr
+		uint8_t *data = new uint8_t [ch->sz];
+		uint8_t iv[16];
+
+		mem->Read(ch->src, ch->sz, data);
+		mem->Read(ch->iv, 16, iv);
+
+		aes_ctr(data, ch->sz, control2, 128, iv);
+
+		mem->Write(ch->iv, 16, iv); // ?? not sure
+		mem->Write(ch->dst, ch->sz, data);
+
+		delete[] data;
 		break;
 	}
 	case 0x20b3: { // HMAC-SHA256
