@@ -15,6 +15,7 @@ private:
 	void StartUp();
 	void SetRvk();
 	void SetTracebuf();
+	void LoadSm();
 
 	ARMComm *comm;
 	Memory *mem;

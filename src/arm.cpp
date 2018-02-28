@@ -14,6 +14,11 @@ enum {
 	RVK_PA = 0x40002000,
 	TRACEBUF_PA = 0x41000000,
 	TRACEBUF_SIZE = 0x1000,
+
+	SM_PA_LIST = 0x50000000, // size=8
+	SM_0x40_BUFFER = 0x50001000, // size=0x40
+	SM_PA = 0x51000000,
+	SM_SIZE = 0x40000,
 };
 
 typedef union {
@@ -126,10 +131,49 @@ void ARM::SetTracebuf() {
 		TRACE("wait 2 error: 0x%x\n", 0x800F0300 | (ret & 0xFF));
 }
 
+void ARM::LoadSm() {
+	FILE *fin = fopen("kprx_auth_sm.self", "rb");
+	if (!fin) {
+		FATAL("failed to open sm self file\n");
+	}
+
+	uint8_t *sm_buf = new uint8_t[SM_SIZE];
+	uint32_t sm_sz = fread(sm_buf, 1, SM_SIZE, fin);
+	mem->Write(SM_PA, sm_sz, sm_buf);
+	delete[] sm_buf;
+
+	shared_buffer_t shared = {0};
+
+	uint32_t sm_palist[] = { SM_PA, sm_sz };
+	mem->Write(SM_PA_LIST, sizeof(sm_palist), sm_palist);
+
+	shared.sm.num_paddrs = 1;
+	shared.sm.paddr_list = SM_PA_LIST;
+	shared.sm.buf_0x40 = SM_0x40_BUFFER;
+	// shared.sm.field_60 = t->field_60; // change = error SCE_SBL_ERROR_DRV_ESYSEXVER 0x800f0338
+	// shared.sm.partition_id = t->partition_id; // change = error SCE_SBL_ERROR_DRV_ENOTINITIALIZED 0x800f0332
+	// shared.sm.auth_id = t->auth_id;         // change = no effect
+	// shared.sm.part_0xF00C = t->part_0xF00C; // change = no effect
+	// shared.sm.part_0xFFFF = t->part_0xFFFF; // change = no effect
+	mem->Write(SHARED_BUFFER, sizeof(shared), &shared);
+
+	TRACE("wait 1\n");
+	comm->Write32(0x10, 0x500201);
+	int32_t ret = 0;
+	do {
+		ret = comm->Read32(0x10);
+		if (ret < 0)
+			FATAL("ret: 0x%08X\n", ret);
+	} while (ret);
+
+	TRACE("wait 1 done\n");
+}
+
 void ARM::Loop() {
 	StartUp();
 	SetSharedBuffer();
 	usleep(100 * 1000); // TODO: figure the race here? sometimes, setting rvk just fails
 	SetRvk();
 	SetTracebuf();
+	LoadSm();
 }
