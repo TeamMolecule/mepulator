@@ -15,10 +15,13 @@
 #include "devices/unknowndevice.h"
 #include "devices/mathdev.h"
 
+Cpu *g_cpu;
+
 int main(int argc, char *argv[]) {
 	setvbuf(stdout, NULL, _IONBF, 0);
 
 	Cpu *cpu = new Cpu();
+	g_cpu = cpu;
 	ARMComm *comm = new ARMComm(cpu);
 	ARM *arm = new ARM(comm, &cpu->memory);
 

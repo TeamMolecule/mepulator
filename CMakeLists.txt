@@ -20,13 +20,17 @@ add_executable(mepulator
 	src/main.cpp
 	src/memory.cpp
 	src/debugger.cpp
+	src/device.cpp
+	src/util.cpp
+	src/log.cpp
+
 	src/devices/armcomm.cpp
 	src/devices/bigmac.cpp
 	src/devices/e001device.cpp
 	src/devices/eeprom.cpp
 	src/devices/unknowndevice.cpp
 	src/devices/mathdev.cpp
-	src/util.cpp
+
 
 	deps/mbedtls/library/aes.c
 	deps/mbedtls/library/aesni.c

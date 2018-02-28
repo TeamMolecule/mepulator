@@ -16,11 +16,23 @@ void Memory::Read(uint32_t pa, uint32_t sz, void *dest) {
 	case BankType::Memory:
 		memcpy(dest, (char*)bank->buffer + pa - bank->pa, sz);
 		break;
-	case BankType::Device:
-		if (sz != 4)
-			FATAL("devices only support 32 bit ops\n");
-		*(uint32_t*)dest = bank->device->Read32(pa - bank->pa);
+	case BankType::Device: {
+		uint32_t device_addr = pa - bank->pa;
+		switch (sz) {
+		case 1:
+			*(uint8_t*)dest = bank->device->Read8(device_addr);
+			break;
+		case 2:
+			*(uint16_t*)dest = bank->device->Read16(device_addr);
+			break;
+		case 4:
+			*(uint32_t*)dest = bank->device->Read32(device_addr);
+			break;
+		default:
+			FATAL("devices don't support %x bit ops\n", sz * 8);
+		}
 		break;
+	}
 	default:
 		FATAL("tried to access undefined device\n");
 	}
@@ -34,11 +46,23 @@ void Memory::Write(uint32_t pa, uint32_t sz, void *src) {
 	case BankType::Memory:
 		memcpy((char*)bank->buffer + pa - bank->pa, src, sz);
 		break;
-	case BankType::Device:
-		if (sz != 4)
-			FATAL("devices only support 32 bit ops\n");
-		bank->device->Write32(pa - bank->pa, *(uint32_t*)src);
+	case BankType::Device: {
+		uint32_t device_addr = pa - bank->pa;
+		switch (sz) {
+		case 1:
+			bank->device->Write8(device_addr, *(uint8_t*)src);
+			break;
+		case 2:
+			bank->device->Write16(device_addr, *(uint16_t*)src);
+			break;
+		case 4:
+			bank->device->Write32(device_addr, *(uint32_t*)src);
+			break;
+		default:
+			FATAL("devices don't support %x bit ops\n", sz * 8);
+		}
 		break;
+	}
 	default:
 		FATAL("tried to access undefined device\n");
 	}

@@ -12,6 +12,13 @@ uint32_t EEPROM::Read32(uint32_t addr) {
 	FATAL("unknown addr 0x%x on read\n", addr);
 }
 
+uint8_t EEPROM::Read8(uint32_t addr) {
+	if (addr < sizeof(memory)) {
+		return ((uint8_t*)memory)[addr];
+	}
+	FATAL("invalid addr 0x%08X on read\n", addr);
+}
+
 void EEPROM::Write32(uint32_t addr, uint32_t value) {
 	FATAL("tried to write to eeprom directly: [0x%x] <= 0x%x\n", addr, value);
 }

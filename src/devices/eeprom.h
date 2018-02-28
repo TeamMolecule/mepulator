@@ -6,6 +6,7 @@ class EEPROMProgrammer;
 
 class EEPROM: public Device {
 public:
+	uint8_t Read8(uint32_t addr);
 	uint32_t Read32(uint32_t addr);
 	void Write32(uint32_t addr, uint32_t value);
 	void Load(const char *path);
