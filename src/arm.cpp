@@ -12,6 +12,8 @@ enum {
 	SHARED_BUFFER = 0x40000000,
 	RVK_PA_LIST = 0x40001000,
 	RVK_PA = 0x40002000,
+	TRACEBUF_PA = 0x41000000,
+	TRACEBUF_SIZE = 0x1000,
 };
 
 typedef union {
@@ -22,7 +24,7 @@ typedef union {
   struct {
     uint32_t paddr;
     uint32_t len;
-  } buf_0x80_init;
+  } tracebuf;
   struct {
     uint32_t num_paddrs;
     uint32_t paddr_list;
@@ -102,9 +104,32 @@ void ARM::SetRvk() {
 	TRACE("set_rvk ret: 0x%x\n", ret);
 }
 
+void ARM::SetTracebuf() {
+	uint32_t ret = 0;
+
+	shared_buffer_t shared = {0};
+	shared.tracebuf.paddr = TRACEBUF_PA;
+	shared.tracebuf.len = TRACEBUF_SIZE;
+	mem->Write(SHARED_BUFFER, sizeof(shared), &shared);
+
+	TRACE("wait 1\n");
+	comm->Write32(0x10, 0x80901);
+	while (comm->Read32(0x10));
+	TRACE("wait 1 done\n");
+
+	do {
+		ret = comm->Read32(0);
+	} while (!(uint16_t)ret);
+	comm->Write32(0, ret);
+	TRACE("wait 2 done, ret=0x%08X\n", ret);
+	if (ret & 0x8000)
+		TRACE("wait 2 error: 0x%x\n", 0x800F0300 | (ret & 0xFF));
+}
+
 void ARM::Loop() {
 	StartUp();
 	SetSharedBuffer();
 	usleep(100 * 1000); // TODO: figure the race here? sometimes, setting rvk just fails
 	SetRvk();
+	SetTracebuf();
 }

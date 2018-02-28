@@ -14,6 +14,7 @@ private:
 	void SetSharedBuffer();
 	void StartUp();
 	void SetRvk();
+	void SetTracebuf();
 
 	ARMComm *comm;
 	Memory *mem;
