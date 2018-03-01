@@ -164,7 +164,11 @@ void ARM::LoadSm() {
 		ret = comm->Read32(0x10);
 		if (ret < 0)
 			FATAL("ret: 0x%08X\n", ret);
+		printf("Ret: 0x%08X\n", ret);
 	} while (ret);
+
+	uint32_t other = comm->Read32(0x0);
+	printf("Other: 0x%08X\n", other); // sometimes we get 0x800F032A / 0x802A
 
 	TRACE("wait 1 done\n");
 }
